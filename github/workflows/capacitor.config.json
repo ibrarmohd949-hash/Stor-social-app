@@ -1,0 +1,6 @@
+{
+  "appId": "com.stocorp.social",
+  "appName": "STO Social App",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
