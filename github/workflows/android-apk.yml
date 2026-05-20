@@ -1,0 +1,53 @@
+name: Build Android Native APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository source codes
+        uses: actions/checkout@v4
+
+      - name: Setup Node J.S Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install overall web dependencies
+        run: npm ci
+
+      - name: Compile and Build Web Assets
+        run: npm run build
+
+      - name: Setup Java J.D.K 17 Development Environment
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Android SDK Manager tools
+        uses: android-actions/setup-android@v3
+
+      - name: Sync React Web Assets into Android Assets
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+          npx cap sync android
+
+      - name: Build standard unsigned release APK files
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Upload native Android installer binary (APK) as Release target
+        uses: actions/upload-artifact@v4
+        with:
+          name: sto-social-app-unsigned-release
+          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
